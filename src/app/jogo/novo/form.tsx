@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form"
 import { z } from "zod"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { toast } from "sonner"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
 
 import { Button } from "@/components/ui/button"
 import {
@@ -16,8 +16,17 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { generateShortKey } from "@/lib/helpers/generate-shor-key"
+import { Slider } from "@/components/ui/slider"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from "@/components/ui/select"
 
-export const enterGameSchema = z.object({
+export const createNewGameSchema = z.object({
   gameId: z
     .string()
     .min(5, {
@@ -25,6 +34,14 @@ export const enterGameSchema = z.object({
     })
     .max(5, {
       message: "ID inválido"
+    }),
+  rounds: z
+    .number()
+    .min(1, {
+      message: "Nº de rodadas inválido"
+    })
+    .max(10, {
+      message: "Nº de rodadas inválido"
     }),
   player: z
     .string()
@@ -35,28 +52,26 @@ export const enterGameSchema = z.object({
       message: "Nome muito longo"
     })
 })
-export type EnterGameSchema = z.infer<typeof enterGameSchema>
+export type CreateNewGameSchema = z.infer<typeof createNewGameSchema>
 
-export function EnterGameForm() {
+export function CreateNewGameForm() {
   const router = useRouter()
-  const searchParams = useSearchParams()
 
-  const form = useForm<EnterGameSchema>({
-    resolver: zodResolver(enterGameSchema),
+  const form = useForm<CreateNewGameSchema>({
+    resolver: zodResolver(createNewGameSchema),
     defaultValues: {
-      gameId: searchParams.get("id") || "",
+      gameId: generateShortKey(5),
+      rounds: 5,
       player: ""
     },
-    mode: "onSubmit"
+    mode: "onChange"
   })
 
-  async function handleEnterGame(data: EnterGameSchema) {
-    const response = await fetch(`/api/game/${data.gameId}`, {
+  async function handleCreateNewGame(data: CreateNewGameSchema) {
+    const response = await fetch("/api/game", {
       method: "POST",
       credentials: "include",
-      body: JSON.stringify({
-        player: data.player
-      })
+      body: JSON.stringify(data)
     })
 
     if (!response.ok) {
@@ -70,7 +85,10 @@ export function EnterGameForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleEnterGame)} className="space-y-2">
+      <form
+        onSubmit={form.handleSubmit(handleCreateNewGame)}
+        className="space-y-2"
+      >
         <div className="space-y-4 py-3">
           <div className="space-y-1">
             <Label htmlFor="description">ID do Jogo</Label>
@@ -93,6 +111,33 @@ export function EnterGameForm() {
                         field.onChange(e)
                       }}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <Label htmlFor="description">Nº de Rodadas</Label>
+            <FormField
+              control={form.control}
+              name="rounds"
+              render={({ field }) => (
+                <FormItem>
+                  <FormControl>
+                    <Select defaultValue={String(field.value)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Nº de Rodadas" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {Array.from({ length: 10 }).map((_, i) => (
+                          <SelectItem key={i} value={String(i + 1)}>
+                            {i + 1} Rodada
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -129,7 +174,7 @@ export function EnterGameForm() {
         </div>
         <div className="flex justify-center">
           <Button type="submit" className="w-full">
-            Entrar no Jogo
+            Criar Novo Jogo
           </Button>
         </div>
       </form>

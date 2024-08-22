@@ -1,3 +1,4 @@
+import { Providers } from "@/components/providers"
 import "@/styles/globals.css"
 import React from "react"
 
@@ -8,7 +9,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-BR" suppressHydrationWarning>
-      <body>{children}</body>
+      <head>
+        <title>Jogo do Impostor</title>
+      </head>
+      <body>
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }

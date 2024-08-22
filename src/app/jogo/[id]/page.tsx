@@ -1,79 +1,137 @@
-import { allFakers, fakerPT_BR } from "@faker-js/faker"
+"use client"
 
-import { ChevronLeft } from "lucide-react"
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { useQuery } from "@tanstack/react-query"
+import { ChevronLeft, ExternalLink, Link2 } from "lucide-react"
+import QRCode from "qrcode"
 
-import { Button } from "@/components/ui/button"
+import { Button, buttonVariants } from "@/components/ui/button"
 import { Wrapper, WrapperBody, WrapperHeader } from "@/components/wrapper"
 import { Game } from "@/app/api/game/route"
+import { cn } from "@/lib/utils"
+import { Scoreboard } from "./scoreboard"
+import { LastWords } from "./last-words"
+import { LoadingSpinner } from "@/components/loading-spinner"
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle
-} from "@/components/ui/card"
-import { CreateNewWordForm } from "./create-new-word-form"
-import { translator } from "@/lib/helpers/translator"
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger
+} from "@/components/ui/dialog"
+import { toast } from "sonner"
 
-export default async function Page({ params }: { params: { id: string } }) {
-  const response = await fetch(
-    `${process.env.NEXT_PUBLIC_API_URL}/api/game/${params.id}`,
-    { cache: "no-cache" }
-  )
+export default function Page({ params }: { params: { id: string } }) {
+  const router = useRouter()
+  const [qrCodeUrl, setQRCodeUrl] = useState("")
 
-  const game = (await response.json()).data as Game
+  const { data: game, isLoading } = useQuery({
+    queryKey: ["game", params.id],
+    queryFn: async () => {
+      const response = await fetch(`/api/game/${params.id}`, {
+        method: "GET",
+        cache: "no-store",
+        credentials: "include"
+      })
 
-  //   const [, saveGame] = useLocalStorage<Game | undefined>("game", undefined)
+      const game = (await response.json()).data as Game
 
-  const word = fakerPT_BR.word.noun()
-  console.log(`${fakerPT_BR}, ${word}`)
-  translator(word).then(console.log)
-  //   for (let key of Object.keys(allFakers)) {
-  //     try {
-  //       if (key.includes("pt"))
-  //         console.log(`${key}, ${allFakers[key].word.noun()}`)
-  //     } catch (e) {
-  //       console.log(`In locale ${key}, an error occurred: ${e}`)
-  //     }
-  //   }
+      if (!game) {
+        router.push("/")
+      }
+
+      return game
+    },
+    staleTime: 0,
+    refetchInterval: 5000
+  })
+
+  useEffect(() => {
+    const generateQRCode = async (text: string) => {
+      try {
+        const url = await QRCode.toDataURL(text, {
+          margin: 1,
+          type: "image/webp",
+          errorCorrectionLevel: "M"
+        })
+        setQRCodeUrl(url)
+      } catch (_) {}
+    }
+
+    if (game)
+      generateQRCode(`${process.env.NEXT_PUBLIC_API_URL}/jogo?id=${game.id}`)
+  }, [game])
+
+  if (isLoading)
+    return (
+      <Wrapper>
+        <WrapperBody>
+          <LoadingSpinner />
+        </WrapperBody>
+      </Wrapper>
+    )
+  if (!game) return null
 
   return (
     <Wrapper>
-      <WrapperHeader title={`Jogo #${game.id}`}>
-        <Link href="/">
-          <Button variant="outline" size="icon">
-            <ChevronLeft className="size-4" />
-            <span className="sr-only">Voltar</span>
-          </Button>
+      <WrapperHeader
+        title={
+          <Dialog>
+            <DialogTrigger className="flex items-center gap-1">
+              Jogo #{game.id} <Link2 className="size-3.5 -rotate-45" />
+            </DialogTrigger>
+            <DialogContent className="space-y-3">
+              <DialogHeader>
+                <DialogTitle>Compartilhar Jogo</DialogTitle>
+              </DialogHeader>
+              <div className="p-3 bg-muted rounded-xl w-full max-w-xs mx-auto border">
+                <img
+                  src={qrCodeUrl}
+                  alt="QR Code"
+                  className="w-full max-w-xs mx-auto"
+                />
+              </div>
+              <DialogFooter className="flex-row gap-2 justify-end">
+                <DialogClose className={buttonVariants({ variant: "outline" })}>
+                  Fechar
+                </DialogClose>
+                <Button
+                  onClick={() => {
+                    navigator.clipboard
+                      .writeText(
+                        `${process.env.NEXT_PUBLIC_API_URL}/jogo?id=${game.id}`
+                      )
+                      .then(() => toast.success("Link copiado!"))
+                  }}
+                >
+                  Copiar Link
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        }
+      >
+        <Link
+          href="/jogo"
+          className={cn(
+            buttonVariants({ variant: "outline", size: "icon" }),
+            "flex"
+          )}
+        >
+          <ChevronLeft className="size-4" />
+          <span className="sr-only">Voltar</span>
         </Link>
       </WrapperHeader>
 
       <WrapperBody>
         <div className="flex flex-col gap-8 w-full">
-          <div className="space-y-3">
-            <p className="font-medium">Placar</p>
+          <Scoreboard game={game} />
 
-            <div className="flex flex-col items-center gap-3">
-              {game.players
-                .sort((a, b) => b.score - a.score)
-                .map((player, i) => (
-                  <div
-                    key={i}
-                    className="border rounded-lg flex w-full gap-3 px-4 py-2 justify-between"
-                  >
-                    <p className="font-semibold">{player.name}</p>
-                    <p className="font-semibold">{player.score}</p>
-                  </div>
-                ))}
-            </div>
-          </div>
-
-          <div className="space-y-3">
-            <p className="font-medium">Últimas Palavras</p>
-
-            <CreateNewWordForm game={game} />
-          </div>
+          <LastWords game={game} />
         </div>
       </WrapperBody>
     </Wrapper>

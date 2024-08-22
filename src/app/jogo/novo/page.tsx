@@ -3,14 +3,13 @@ import Link from "next/link"
 
 import { buttonVariants } from "@/components/ui/button"
 import { Wrapper, WrapperBody, WrapperHeader } from "@/components/wrapper"
-import { EnterGameForm } from "./form"
+import { CreateNewGameForm } from "./form"
 import { cn } from "@/lib/utils"
-import { Suspense } from "react"
 
 export default function Page() {
   return (
     <Wrapper>
-      <WrapperHeader title="Entrar no Jogo">
+      <WrapperHeader title="Criar Novo Jogo">
         <Link
           href="/"
           className={cn(
@@ -25,9 +24,7 @@ export default function Page() {
 
       <WrapperBody>
         <div className="flex flex-col gap-8">
-          <Suspense>
-            <EnterGameForm />
-          </Suspense>
+          <CreateNewGameForm />
         </div>
       </WrapperBody>
     </Wrapper>
