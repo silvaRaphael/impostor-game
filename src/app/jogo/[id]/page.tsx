@@ -24,31 +24,38 @@ import {
   DialogTrigger
 } from "@/components/ui/dialog"
 import { toast } from "sonner"
+import { useGameData } from "@/lib/hooks/use-firestore-listener"
 
 export default function Page({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [qrCodeUrl, setQRCodeUrl] = useState("")
 
-  const { data: game, isLoading } = useQuery({
-    queryKey: ["game", params.id],
-    queryFn: async () => {
-      const response = await fetch(`/api/game/${params.id}`, {
-        method: "GET",
-        cache: "no-store",
-        credentials: "include"
-      })
+  // const { data: game, isLoading } = useQuery({
+  //   queryKey: ["game", params.id],
+  //   queryFn: async () => {
+  //     const response = await fetch(`/api/game/${params.id}`, {
+  //       method: "GET",
+  //       cache: "no-store",
+  //       credentials: "include"
+  //     })
 
-      const game = (await response.json()).data as Game
+  //     const game = (await response.json()).data as Game
 
-      if (!game) {
-        router.push("/")
-      }
+  //     if (!game) {
+  //       router.push("/")
+  //     }
 
-      return game
-    },
-    staleTime: 0,
-    refetchInterval: 5000
-  })
+  //     return game
+  //   },
+  //   staleTime: 0,
+  //   refetchInterval: 5000
+  // })
+
+  const {
+    data: game,
+    error,
+    isLoading
+  } = useGameData(["game", params.id], "games", params.id)
 
   useEffect(() => {
     const generateQRCode = async (text: string) => {
@@ -74,6 +81,10 @@ export default function Page({ params }: { params: { id: string } }) {
         </WrapperBody>
       </Wrapper>
     )
+  if (error || !game) {
+    router.push("/")
+    return null
+  }
   if (!game) return null
 
   return (

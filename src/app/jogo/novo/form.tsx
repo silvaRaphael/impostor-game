@@ -17,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { generateShortKey } from "@/lib/helpers/generate-shor-key"
-import { Slider } from "@/components/ui/slider"
 import {
   Select,
   SelectContent,
@@ -91,7 +90,7 @@ export function CreateNewGameForm() {
       >
         <div className="space-y-4 py-3">
           <div className="space-y-1">
-            <Label htmlFor="description">ID do Jogo</Label>
+            <Label htmlFor="gameId">ID do Jogo</Label>
             <FormField
               control={form.control}
               name="gameId"
@@ -119,14 +118,20 @@ export function CreateNewGameForm() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="description">Nº de Rodadas</Label>
+            <Label htmlFor="rounds">Nº de Rodadas</Label>
             <FormField
               control={form.control}
               name="rounds"
               render={({ field }) => (
                 <FormItem>
                   <FormControl>
-                    <Select defaultValue={String(field.value)}>
+                    <Select
+                      defaultValue={String(field.value)}
+                      onValueChange={(e) => {
+                        field.onChange(Number(e))
+                      }}
+                      name={field.name}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Nº de Rodadas" />
                       </SelectTrigger>
@@ -146,7 +151,7 @@ export function CreateNewGameForm() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="description">Seu Nome</Label>
+            <Label htmlFor="player">Seu Nome</Label>
             <FormField
               control={form.control}
               name="player"

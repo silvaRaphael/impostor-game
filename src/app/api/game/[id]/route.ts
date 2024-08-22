@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { getDbData, setDbData } from "@/lib/helpers/handle-db-data"
+import { getDbData, updateDbData } from "@/lib/helpers/handle-db-data"
 import { Game } from "../route"
 
 export async function GET(
@@ -14,9 +14,7 @@ export async function GET(
     if (!gameId) throw new Error("ID inválido!")
     if (!player) throw new Error("Jogador inválido!")
 
-    const games = await getDbData<Game[]>("games")
-
-    const game = games.find((game) => game.id === gameId)
+    let game = await getDbData<Game>("games", gameId)
 
     if (!game) throw new Error("Jogo não encontrado!")
 
@@ -39,32 +37,24 @@ export async function POST(
     if (!gameId) throw new Error("ID inválido!")
     if (!player) throw new Error("Nome inválido!")
 
-    const games = await getDbData<Game[]>("games")
-
-    const game = games.find((game) => game.id === gameId)
+    let game = await getDbData<Game>("games", gameId)
 
     if (!game) throw new Error("Jogo não encontrado!")
 
     const playerInUse = game.players.find((item) => item.name === player)
     if (!playerInUse) {
-      const newGames = games.map((game) => {
-        if (game.id === gameId) {
-          return {
-            ...game,
-            players: [
-              ...game.players,
-              {
-                name: player,
-                score: 0
-              }
-            ]
+      game = {
+        ...game,
+        players: [
+          ...game.players,
+          {
+            name: player,
+            score: 0
           }
-        }
+        ]
+      }
 
-        return game
-      })
-
-      await setDbData<Game[]>("games", newGames)
+      await updateDbData<Game>("games", game, gameId)
     }
 
     const data = game
@@ -96,24 +86,16 @@ export async function DELETE(
     if (!gameId) throw new Error("ID inválido!")
     if (!player) throw new Error("Jogador inválido!")
 
-    const games = await getDbData<Game[]>("games")
-
-    const game = games.find((game) => game.id === gameId)
+    let game = await getDbData<Game>("games", gameId)
 
     if (!game) throw new Error("Jogo não encontrado!")
 
-    const newGames = games.map((game) => {
-      if (game.id === gameId) {
-        return {
-          ...game,
-          players: game.players.filter((item) => item.name !== player)
-        }
-      }
+    game = {
+      ...game,
+      players: game.players.filter((item) => item.name !== player)
+    }
 
-      return game
-    })
-
-    await setDbData<Game[]>("games", newGames)
+    await updateDbData("games", game, gameId)
 
     const data = game
 

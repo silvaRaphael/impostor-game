@@ -73,7 +73,7 @@ export function EnterGameForm() {
       <form onSubmit={form.handleSubmit(handleEnterGame)} className="space-y-2">
         <div className="space-y-4 py-3">
           <div className="space-y-1">
-            <Label htmlFor="description">ID do Jogo</Label>
+            <Label htmlFor="gameId">ID do Jogo</Label>
             <FormField
               control={form.control}
               name="gameId"
@@ -101,7 +101,7 @@ export function EnterGameForm() {
           </div>
 
           <div className="space-y-1">
-            <Label htmlFor="description">Seu Nome</Label>
+            <Label htmlFor="player">Seu Nome</Label>
             <FormField
               control={form.control}
               name="player"

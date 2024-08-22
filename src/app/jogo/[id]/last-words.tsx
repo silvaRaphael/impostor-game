@@ -216,6 +216,7 @@ export function LastWords({ game }: { game: Game }) {
           )}
 
           {game.words.length === game.rounds &&
+            game.words[game.words.length - 1].done &&
             game.creator === savedPlayer && (
               <Button className="w-full" onClick={() => handleRemoveGame()}>
                 Excluir Jogo

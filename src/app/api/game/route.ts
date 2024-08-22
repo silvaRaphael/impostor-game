@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { getDbData, setDbData } from "@/lib/helpers/handle-db-data"
+import {
+  deleteDbData,
+  getDbData,
+  insertDbData
+} from "@/lib/helpers/handle-db-data"
 
 export type Player = {
   name: string
@@ -31,9 +35,7 @@ export async function POST(req: NextRequest) {
     if (!rounds) throw new Error("Nº de rodadas inválido!")
     if (!player) throw new Error("Nome inválido!")
 
-    const games = await getDbData<Game[]>("games")
-
-    let game = games.find((game) => game.id === gameId)
+    let game = await getDbData<Game>("games", gameId)
 
     if (game) throw new Error("Jogo já criado!")
 
@@ -50,9 +52,7 @@ export async function POST(req: NextRequest) {
       words: []
     }
 
-    const newGames = [...games, game]
-
-    await setDbData<Game[]>("games", newGames)
+    await insertDbData<Game>("games", game, game.id)
 
     const data = game
 
@@ -78,15 +78,11 @@ export async function DELETE(req: NextRequest) {
 
     if (!gameId) throw new Error("ID inválido!")
 
-    const games = await getDbData<Game[]>("games")
-
-    const game = games.find((game) => game.id === gameId)
+    let game = await getDbData<Game>("games", gameId)
 
     if (!game) throw new Error("Jogo não encontrado!")
 
-    const newGames = games.filter((item) => item.id !== gameId)
-
-    await setDbData<Game[]>("games", newGames)
+    await deleteDbData("games", gameId)
 
     const response = NextResponse.json({})
 

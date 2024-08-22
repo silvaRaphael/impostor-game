@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server"
 
-import { getDbData, setDbData } from "@/lib/helpers/handle-db-data"
+import { getDbData, updateDbData } from "@/lib/helpers/handle-db-data"
 import { Game } from "../../route"
 import { availableWords } from "@/lib/words"
 import { getRandomItemFromList } from "@/lib/helpers/get-random-item-from-list"
@@ -16,47 +16,37 @@ export async function POST(
     if (!gameId) throw new Error("ID inválido!")
     if (!player) throw new Error("Jogador inválido!")
 
-    const games = await getDbData<Game[]>("games")
-
-    const game = games.find((game) => game.id === gameId)
+    let game = await getDbData<Game>("games", gameId)
 
     if (!game) throw new Error("Jogo não encontrado!")
 
     if (game.words.length === game.rounds)
       throw new Error("Rodadas finalizadas!")
 
-    const newGames = (await Promise.all(
-      games.map(async (game) => {
-        if (game.id === gameId) {
-          const word = getRandomItemFromList(
-            availableWords,
-            game.words.map((word) => word.word)
-          )
+    const word = getRandomItemFromList(
+      availableWords,
+      game.words.map((word) => word.word)
+    )
 
-          const impostor = getRandomItemFromList(
-            game.players.map((player) => player.name),
-            []
-          )
+    const impostor = getRandomItemFromList(
+      game.players.map((player) => player.name),
+      []
+    )
 
-          return {
-            ...game,
-            words: [
-              ...game.words,
-              {
-                word,
-                impostor,
-                done: false,
-                votes: []
-              }
-            ]
-          }
+    game = {
+      ...game,
+      words: [
+        ...game.words,
+        {
+          word,
+          impostor,
+          done: false,
+          votes: []
         }
+      ]
+    }
 
-        return game
-      })
-    )) as Game[]
-
-    await setDbData<Game[]>("games", newGames)
+    await updateDbData<Game>("games", game, gameId)
 
     const data = game
 
@@ -78,24 +68,16 @@ export async function DELETE(
     if (!gameId) throw new Error("ID inválido!")
     if (!word) throw new Error("Palavra inválida!")
 
-    const games = await getDbData<Game[]>("games")
-
-    const game = games.find((game) => game.id === gameId)
+    let game = await getDbData<Game>("games", gameId)
 
     if (!game) throw new Error("Jogo não encontrado!")
 
-    const newGames = games.map((game) => {
-      if (game.id === gameId) {
-        return {
-          ...game,
-          words: game.words.filter((item) => item.word !== word)
-        }
-      }
+    game = {
+      ...game,
+      words: game.words.filter((item) => item.word !== word)
+    }
 
-      return game
-    })
-
-    setDbData<Game[]>("games", newGames)
+    await updateDbData<Game>("games", game, gameId)
 
     const data = game
 

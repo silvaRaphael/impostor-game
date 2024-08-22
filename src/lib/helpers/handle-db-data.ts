@@ -1,23 +1,43 @@
-import { promises as fs } from "fs"
+import { deleteDoc, doc, getDoc, setDoc, updateDoc } from "firebase/firestore"
 
-export async function getDbData<T>(db: string) {
-  console.log(process.cwd())
-  console.log(await fs.readdir(process.cwd()))
-  return JSON.parse(
-    await fs.readFile(process.cwd() + `/src/db/${db}.json`, "utf8")
-    // await fs.readFile(__dirname + `/src/db/${db}.json`, "utf8")
-    // await fs.readFile(`../../db/${db}.json`, "utf8")
-  ) as T
+import { db } from "@/lib/firebase"
+
+export async function getDbData<T>(dbName: string, id: string) {
+  try {
+    const docRef = doc(db, dbName, id)
+    const docSnap = await getDoc(docRef)
+
+    if (!docSnap.exists()) return null
+
+    return docSnap.data() as T
+  } catch (e) {
+    throw e
+  }
 }
 
-export async function setDbData<T>(db: string, data: T) {
-  await fs.writeFile(
-    process.cwd() + `/src/db/${db}.json`,
-    // __dirname + `/src/db/${db}.json`,
-    // `../../db/${db}.json`,
-    JSON.stringify(data, null, 2),
-    {
-      encoding: "utf-8"
-    }
-  )
+export async function insertDbData<T>(dbName: string, data: T, id: string) {
+  try {
+    const docRef = doc(db, dbName, id)
+    await setDoc(docRef, data as any)
+  } catch (e) {
+    throw e
+  }
+}
+
+export async function updateDbData<T>(dbName: string, data: T, id: string) {
+  try {
+    const docRef = doc(db, dbName, id)
+    await updateDoc(docRef, data as any)
+  } catch (e) {
+    throw e
+  }
+}
+
+export async function deleteDbData(dbName: string, id: string) {
+  try {
+    const docRef = doc(db, dbName, id)
+    await deleteDoc(docRef)
+  } catch (e) {
+    throw e
+  }
 }
