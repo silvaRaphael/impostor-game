@@ -1,0 +1,34 @@
+[
+  {
+    "id": "D6S53",
+    "creator": "Rapha",
+    "players": [
+      {
+        "name": "Rapha",
+        "score": 1
+      },
+      {
+        "name": "Gi",
+        "score": 2
+      }
+    ],
+    "words": [
+      {
+        "word": "banana",
+        "impostor": "Gi"
+      },
+      {
+        "word": "alface",
+        "impostor": "Rapha"
+      },
+      {
+        "word": "bola",
+        "impostor": "Gi"
+      },
+      {
+        "word": "dente",
+        "impostor": null
+      }
+    ]
+  }
+]
