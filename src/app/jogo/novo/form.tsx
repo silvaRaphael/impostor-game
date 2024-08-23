@@ -24,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select"
+import { slugify } from "@/lib/helpers/slugfy"
+import { useMutation } from "@tanstack/react-query"
 
 export const createNewGameSchema = z.object({
   gameId: z
@@ -66,26 +68,32 @@ export function CreateNewGameForm() {
     mode: "onChange"
   })
 
-  async function handleCreateNewGame(data: CreateNewGameSchema) {
-    const response = await fetch("/api/game", {
-      method: "POST",
-      credentials: "include",
-      body: JSON.stringify(data)
-    })
+  const { mutateAsync: handleCreateNewGame, isPending } = useMutation({
+    mutationKey: ["game"],
+    mutationFn: async (data: CreateNewGameSchema) => {
+      const response = await fetch("/api/game", {
+        method: "POST",
+        credentials: "include",
+        body: JSON.stringify({
+          ...data,
+          player: data.player.trim()
+        })
+      })
 
-    if (!response.ok) {
-      return toast.error((await response.json()).message)
+      if (!response.ok) {
+        return toast.error((await response.json()).message)
+      }
+
+      const result = await response.json()
+
+      router.push(`/jogo/${result.data.id}`)
     }
-
-    const result = await response.json()
-
-    router.push(`/jogo/${result.data.id}`)
-  }
+  })
 
   return (
     <Form {...form}>
       <form
-        onSubmit={form.handleSubmit(handleCreateNewGame)}
+        onSubmit={form.handleSubmit((data) => handleCreateNewGame(data))}
         className="space-y-2"
       >
         <div className="space-y-4 py-3">
@@ -103,9 +111,10 @@ export function CreateNewGameForm() {
                       {...field}
                       value={field.value ?? ""}
                       onChange={(e) => {
-                        e.currentTarget.value = e.currentTarget.value
-                          .toUpperCase()
-                          .replaceAll(" ", "")
+                        e.currentTarget.value = slugify(
+                          e.currentTarget.value,
+                          ""
+                        )
 
                         field.onChange(e)
                       }}
@@ -164,8 +173,10 @@ export function CreateNewGameForm() {
                       {...field}
                       value={field.value ?? ""}
                       onChange={(e) => {
-                        e.currentTarget.value =
-                          e.currentTarget.value.toUpperCase()
+                        e.currentTarget.value = slugify(
+                          e.currentTarget.value,
+                          ""
+                        )
 
                         field.onChange(e)
                       }}
@@ -178,7 +189,7 @@ export function CreateNewGameForm() {
           </div>
         </div>
         <div className="flex justify-center">
-          <Button type="submit" className="w-full">
+          <Button type="submit" className="w-full" isLoading={isPending}>
             Criar Novo Jogo
           </Button>
         </div>

@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
-import { useQuery } from "@tanstack/react-query"
-import { ChevronLeft, ExternalLink, Link2 } from "lucide-react"
+import { ChevronLeft, Link2 } from "lucide-react"
 import QRCode from "qrcode"
 
 import { Button, buttonVariants } from "@/components/ui/button"
@@ -29,27 +28,6 @@ import { useGameData } from "@/lib/hooks/use-firestore-listener"
 export default function Page({ params }: { params: { id: string } }) {
   const router = useRouter()
   const [qrCodeUrl, setQRCodeUrl] = useState("")
-
-  // const { data: game, isLoading } = useQuery({
-  //   queryKey: ["game", params.id],
-  //   queryFn: async () => {
-  //     const response = await fetch(`/api/game/${params.id}`, {
-  //       method: "GET",
-  //       cache: "no-store",
-  //       credentials: "include"
-  //     })
-
-  //     const game = (await response.json()).data as Game
-
-  //     if (!game) {
-  //       router.push("/")
-  //     }
-
-  //     return game
-  //   },
-  //   staleTime: 0,
-  //   refetchInterval: 5000
-  // })
 
   const {
     data: game,

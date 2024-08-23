@@ -13,7 +13,7 @@ export function Scoreboard({ game }: { game: Game }) {
   const router = useRouter()
   const savedPlayer = getCookie("player")
 
-  const { mutateAsync: handleRemovePlayer } = useMutation({
+  const { mutateAsync: handleRemovePlayer, isPending } = useMutation({
     mutationKey: ["game", game.id],
     mutationFn: async (player: string) => {
       if (!savedPlayer) return toast.error("Não foi possível remover jogador!")
@@ -63,6 +63,7 @@ export function Scoreboard({ game }: { game: Game }) {
             size="icon"
             className="w-full"
             onClick={() => handleRemovePlayer(savedPlayer)}
+            isLoading={isPending}
           >
             Sair
           </Button>

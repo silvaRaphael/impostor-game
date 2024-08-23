@@ -8,9 +8,9 @@ export function getCookie(name: string, cookies?: string): string | null {
   const cookieName = name + "="
   const decodedCookie = decodeURIComponent(cookies ?? document.cookie)
   const cookieArray = decodedCookie.split(";")
-  for (let i = 0; i < cookieArray.length; i++) {
+  for (let i = 0; i < cookieArray?.length; i++) {
     let cookie = cookieArray[i]
-    while (cookie.charAt(0) === " ") {
+    while (cookie?.charAt(0) === " ") {
       cookie = cookie.substring(1)
     }
     if (cookie.indexOf(cookieName) === 0) {

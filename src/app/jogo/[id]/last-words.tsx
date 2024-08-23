@@ -23,7 +23,10 @@ export function LastWords({ game }: { game: Game }) {
   const router = useRouter()
   const savedPlayer = getCookie("player")
 
-  const { mutateAsync: handleCreateNewWord } = useMutation({
+  const {
+    mutateAsync: handleCreateNewWord,
+    isPending: isPendingCreateNewWord
+  } = useMutation({
     mutationKey: ["game", game.id],
     mutationFn: async () => {
       if (!savedPlayer) return toast.error("Não foi possível votar!")
@@ -43,28 +46,29 @@ export function LastWords({ game }: { game: Game }) {
     }
   })
 
-  const { mutateAsync: handleRemoveWord } = useMutation({
-    mutationKey: ["game", game.id],
-    mutationFn: async (word: string) => {
-      if (!savedPlayer)
-        return toast.error("Não foi possível remover a palavra!")
+  const { mutateAsync: handleRemoveWord, isPending: isPendingRemoveWord } =
+    useMutation({
+      mutationKey: ["game", game.id],
+      mutationFn: async (word: string) => {
+        if (!savedPlayer)
+          return toast.error("Não foi possível remover a palavra!")
 
-      const response = await fetch(`/api/game/${game.id}/word?word=${word}`, {
-        method: "DELETE",
-        credentials: "include"
-      })
+        const response = await fetch(`/api/game/${game.id}/word?word=${word}`, {
+          method: "DELETE",
+          credentials: "include"
+        })
 
-      if (!response.ok) {
-        return toast.error((await response.json()).message)
+        if (!response.ok) {
+          return toast.error((await response.json()).message)
+        }
+
+        queryClient.invalidateQueries({
+          queryKey: ["game", game.id]
+        })
       }
+    })
 
-      queryClient.invalidateQueries({
-        queryKey: ["game", game.id]
-      })
-    }
-  })
-
-  const { mutateAsync: handleVote } = useMutation({
+  const { mutateAsync: handleVote, isPending: isPendingVote } = useMutation({
     mutationKey: ["game", game.id],
     mutationFn: async (to: string) => {
       if (!savedPlayer) return toast.error("Não foi possível votar!")
@@ -87,27 +91,28 @@ export function LastWords({ game }: { game: Game }) {
     }
   })
 
-  const { mutateAsync: handleRemoveGame } = useMutation({
-    mutationKey: ["game", game.id],
-    mutationFn: async () => {
-      if (!savedPlayer) return toast.error("Não foi possível remover o jogo!")
+  const { mutateAsync: handleRemoveGame, isPending: isPendingRemoveGame } =
+    useMutation({
+      mutationKey: ["game", game.id],
+      mutationFn: async () => {
+        if (!savedPlayer) return toast.error("Não foi possível remover o jogo!")
 
-      const response = await fetch(`/api/game?game=${game.id}`, {
-        method: "DELETE",
-        credentials: "include"
-      })
+        const response = await fetch(`/api/game?game=${game.id}`, {
+          method: "DELETE",
+          credentials: "include"
+        })
 
-      if (!response.ok) {
-        return toast.error((await response.json()).message)
+        if (!response.ok) {
+          return toast.error((await response.json()).message)
+        }
+
+        queryClient.invalidateQueries({
+          queryKey: ["game", game.id]
+        })
+
+        router.push("/")
       }
-
-      queryClient.invalidateQueries({
-        queryKey: ["game", game.id]
-      })
-
-      router.push("/")
-    }
-  })
+    })
 
   return (
     <div className="space-y-3">
@@ -138,6 +143,7 @@ export function LastWords({ game }: { game: Game }) {
                   size="icon"
                   className="size-6"
                   onClick={() => handleRemoveWord(word.word)}
+                  isLoading={isPendingRemoveWord}
                 >
                   <X className="size-4" />
                 </Button>
@@ -163,7 +169,11 @@ export function LastWords({ game }: { game: Game }) {
             game.words[game.words.length - 1].done) &&
           game.words.length < game.rounds ? (
             game.creator === savedPlayer && (
-              <Button className="w-full" onClick={() => handleCreateNewWord()}>
+              <Button
+                className="w-full"
+                onClick={() => handleCreateNewWord()}
+                isLoading={isPendingCreateNewWord}
+              >
                 Nova Palavra
               </Button>
             )
@@ -176,7 +186,11 @@ export function LastWords({ game }: { game: Game }) {
                 "w-full pointer-events-none"
               )}
             >
-              {game.words.length < game.rounds ? "Já Votou" : "Jogo Finalizado"}
+              {game.words.length === game.rounds &&
+              game.words[game.words.length - 1].votes.length ===
+                game.players.length
+                ? "Jogo Finalizado"
+                : "Já Votou"}
             </p>
           ) : (
             <Dialog>
@@ -206,6 +220,7 @@ export function LastWords({ game }: { game: Game }) {
                         variant="secondary"
                         size="sm"
                         onClick={() => handleVote(player.name)}
+                        isLoading={isPendingVote}
                       >
                         Votar
                       </Button>
@@ -218,7 +233,11 @@ export function LastWords({ game }: { game: Game }) {
           {game.words.length === game.rounds &&
             game.words[game.words.length - 1].done &&
             game.creator === savedPlayer && (
-              <Button className="w-full" onClick={() => handleRemoveGame()}>
+              <Button
+                className="w-full"
+                onClick={() => handleRemoveGame()}
+                isLoading={isPendingRemoveGame}
+              >
                 Excluir Jogo
               </Button>
             )}
